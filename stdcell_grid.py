@@ -61,6 +61,12 @@ def group_cells_by_base_and_size(cells):
     for group in cell_groups.values():
         group.sort(key=lambda x: int(x[0]) if x[0].isdigit() else int(re.sub(r'\D', '', x[0])))
 
+    # Print the grouping information
+    print("\nCell groupings by size variation:")
+    for base_name, group in cell_groups.items():
+        sizes = [size for size, _ in group]
+        print(f"  {base_name}: {len(group)} variations - sizes: {', '.join(sizes)}")
+
     return cell_groups
 
 def create_functional_groups(cells):
@@ -69,6 +75,17 @@ def create_functional_groups(cells):
     for cell in cells:
         category = categorize_cell(cell.name)
         groups[category].append(cell)
+
+    # Print the functional grouping information
+    print("\nCell groupings by functional category:")
+    for category, cells_list in groups.items():
+        print(f"  {category}: {len(cells_list)} cells")
+        # Print first few cell names as examples
+        example_cells = [cell.name.rsplit('_', 1)[0] for cell in cells_list[:5]]
+        if example_cells:
+            print(f"    Examples: {', '.join(example_cells)}" +
+                  (f" and {len(cells_list)-5} more..." if len(cells_list) > 5 else ""))
+
     return groups
 
 def create_stdcell_grid() -> gf.Component:
@@ -109,10 +126,11 @@ def create_stdcell_grid() -> gf.Component:
 
             if cell is not None:
                 # Rename the cell with a unique identifier to avoid conflicts
-                cell.name = f"{cell.name}_{i}"
+                cell.name = f"{cell.name}__i{i}"
                 std_cells.append(cell)
                 seen_cells.add(basename)
-                print(f"Loaded cell from: {gds_file.relative_to(pdk_path)}")
+                # Print the actual cell name loaded from each GDS file
+                print(f"Loaded cell: {cell.name} from: {gds_file.relative_to(pdk_path)}")
         except Exception as e:
             print(f"Failed to process GDS file {gds_file}: {str(e)}")
 
