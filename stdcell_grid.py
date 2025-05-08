@@ -165,28 +165,27 @@ def create_stdcell_grid() -> gf.Component:
 
         # Add base name label
         x_base = col * (max_width + padding) * 4
-        y_base = row * (max_height + padding) * 3
+        y_base = row * (max_height + padding) * 6  # Increased vertical spacing to accommodate vertical cell arrangement
         c.add_label(text=f"=== {base_name} ===",
                    position=(x_base, y_base + max_height + padding*0.5))
 
-        # Place cells in the same group horizontally
+        # Place cells in the same group vertically (instead of horizontally)
         for j, (size, cell) in enumerate(group):
-            x = x_base + j * (max_width + padding)
-            y = y_base
+            x = x_base
+            y = y_base - j * (max_height + padding)  # Stack cells vertically with largest at top
 
             ref = c << cell
             ref.move((x, y))
 
-            # Add label with original cell name (without the unique suffix)
-            original_name = cell.name.rsplit('_', 1)[0]
-            c.add_label(text=f"{original_name}", position=(x, y - padding/2))
+            # Add label with size and cell name
+            c.add_label(text=f"{cell.name} (size: {size})", position=(x, y - padding/2))
 
     # Create another grid below for functional groups
     print("\nCreating functional groups grid...")
     functional_groups = create_functional_groups(std_cells)
 
-    # Calculate dimensions for functional groups section
-    y_offset_functional = (max_height + padding) * (n_rows_size + 2)
+    # Calculate dimensions for functional groups section (adjusted for new vertical layout)
+    y_offset_functional = (max_height + padding) * (n_rows_size * 6 + 2)  # Adjusted for increased vertical spacing
 
     # Add section divider
     c.add_label(text="============= FUNCTIONAL GROUPS =============",
