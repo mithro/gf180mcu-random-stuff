@@ -124,7 +124,7 @@ def create_stdcell_grid() -> gf.Component:
 
             # Get filename without extension to use as cell name
             filename_without_ext = os.path.splitext(basename)[0]
-            
+
             # Import the cell from GDS
             cell = gf.import_gds(gds_file)
 
@@ -144,85 +144,87 @@ def create_stdcell_grid() -> gf.Component:
 
     print(f"\nSuccessfully loaded {len(std_cells)} cells")
 
-    # First, create a grid showing size variations
-    print("\nCreating size variation grid...")
+    # First, group cells by their base name and size
+    print("\nGrouping cells by base name and size...")
     cell_groups = group_cells_by_base_and_size(std_cells)
 
-    # Calculate grid dimensions for size variations
-    n_groups = len(cell_groups)
-    n_cols_size = 8  # Number of columns for size variations
-    n_rows_size = int(np.ceil(n_groups / n_cols_size))
+    # Also group by functional category
+    print("\nGrouping cells by functional category...")
+    functional_groups = create_functional_groups(std_cells)
 
     # Find maximum cell dimensions
     max_width = max(cell.size_info.width for cell in std_cells)
     max_height = max(cell.size_info.height for cell in std_cells)
     padding = 10  # μm
 
-    # Place cells grouped by size
-    for i, (base_name, group) in enumerate(cell_groups.items()):
-        row = i // n_cols_size
-        col = i % n_cols_size
+    # Now create a grid where each functional category gets its own section
+    y_offset = 0
 
-        # Add base name label
-        x_base = col * (max_width + padding) * 4
-        y_base = row * (max_height + padding) * 6  # Increased vertical spacing to accommodate vertical cell arrangement
-        c.add_label(text=f"=== {base_name} ===",
-                   position=(x_base, y_base + max_height + padding*0.5))
-
-        # Place cells in the same group vertically (instead of horizontally)
-        for j, (size, cell) in enumerate(group):
-            x = x_base
-            y = y_base - j * (max_height + padding)  # Stack cells vertically with largest at top
-
-            ref = c << cell
-            ref.move((x, y))
-
-            # Add label with size and cell name
-            c.add_label(text=f"{cell.name} (size: {size})", position=(x, y - padding/2))
-
-    # Create another grid below for functional groups
-    print("\nCreating functional groups grid...")
-    functional_groups = create_functional_groups(std_cells)
-
-    # Calculate dimensions for functional groups section (adjusted for new vertical layout)
-    y_offset_functional = (max_height + padding) * (n_rows_size * 6 + 2)  # Adjusted for increased vertical spacing
-
-    # Add section divider
-    c.add_label(text="============= FUNCTIONAL GROUPS =============",
-               position=(0, y_offset_functional - padding*2),
-               layer=(66, 0))
-
-    # Place cells grouped by function
-    group_idx = 0
-    for category, cells in functional_groups.items():
-        # Create grid arrangement per category
-        n_cols_func = 8  # Cells per row in this category
-        n_cells = len(cells)
-        n_rows_func = int(np.ceil(n_cells / n_cols_func))
-
-        # Category header
-        x_cat = 0
-        y_cat = y_offset_functional + group_idx * (max_height + padding) * (n_rows_func + 1.5)
-        c.add_label(text=f"=== {category.upper()} ({n_cells} cells) ===",
-                   position=(x_cat, y_cat),
+    for category, category_cells in functional_groups.items():
+        # Add category header
+        c.add_label(text=f"================ {category.upper()} ================",
+                   position=(0, y_offset),
                    layer=(66, 0))
 
-        # Place cells in this category in a grid
-        for j, cell in enumerate(cells):
-            row = j // n_cols_func
-            col = j % n_cols_func
+        # Create a dict to hold grouped cells in this category
+        category_groups = {}
 
-            x = col * (max_width + padding)
-            y = y_cat - (row + 1) * (max_height + padding)
+        # Find all base cell types in this category
+        for cell in category_cells:
+            cell_name = cell.name
+            match = re.match(r'(.+?)_([1248]|(?:16|20|32|64))$', cell_name)
 
-            ref = c << cell
-            ref.move((x, y))
+            if match:
+                base_name = match.group(1)
+                if base_name in cell_groups:
+                    category_groups[base_name] = cell_groups[base_name]
+            else:
+                # Cells without size suffix
+                if cell_name in cell_groups:
+                    category_groups[cell_name] = cell_groups[cell_name]
 
-            # Add label with original cell name (without the unique suffix)
-            original_name = cell.name.rsplit('_', 1)[0]
-            c.add_label(text=f"{original_name}", position=(x, y - padding/2))
+        # Calculate grid dimensions for this category
+        n_cell_types = len(category_groups)
+        n_cols = 5  # Number of columns in the grid
+        n_rows = int(np.ceil(n_cell_types / n_cols))
 
-        group_idx += 1
+        # Calculate the maximum stack height for this category
+        max_stack_height = 0
+        for base_name, group in category_groups.items():
+            stack_height = len(group) * (max_height + padding)
+            max_stack_height = max(max_stack_height, stack_height)
+
+        y_offset += padding * 2  # Space after category header
+
+        # Place each cell type in the grid
+        for i, (base_name, group) in enumerate(category_groups.items()):
+            row = i // n_cols
+            col = i % n_cols
+
+            # Calculate position for this stack
+            x_base = col * (max_width + padding) * 3  # More horizontal spacing
+            y_base = y_offset + row * (max_stack_height + padding * 3)  # Vertical position for this stack
+
+            # Add base name label
+            c.add_label(text=f"{base_name}",
+                       position=(x_base, y_base),
+                       layer=(66, 0))
+
+            # Stack different sizes of this cell type vertically
+            for j, (size, cell) in enumerate(group):
+                x = x_base
+                y = y_base - (j + 1) * (max_height + padding)  # Stack cells vertically with largest at top
+
+                ref = c << cell
+                ref.move((x, y))
+
+                # Add label with size
+                c.add_label(text=f"size: {size}",
+                           position=(x - padding/2, y),
+                           layer=(66, 0))
+
+        # Update y_offset for next category
+        y_offset += (n_rows * (max_stack_height + padding * 3)) + padding * 4
 
     return c
 
