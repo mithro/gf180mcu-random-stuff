@@ -1,19 +1,19 @@
 import gdsfactory as gf
 import numpy as np
-from gdsfactory.typings import Component
+from gdsfactory.component import Component
 from typing import List
 
 def create_stdcell_grid() -> Component:
     """Creates a grid layout of all standard cells from GF180MCU PDK."""
     
     # Get the GF180MCU PDK
-    from gdsfactory.technology import install_technology
     from gdsfactory.config import PATH
 
     try:
         import gf180
     except ImportError:
-        install_technology("gf180")
+        gf.config.rich_output = False  # Disable rich output for installation
+        gf.technology.load_technology(name="gf180")
         import gf180
 
     # Create main component to hold the grid
@@ -70,4 +70,4 @@ if __name__ == "__main__":
     grid.write_gds("gf180mcu_stdcell_grid.gds")
     
     # Optionally view the layout
-    # grid.show()
+    grid.show()
