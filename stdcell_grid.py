@@ -156,16 +156,13 @@ def create_stdcell_grid() -> gf.Component:
     max_width = max(cell.size_info.width for cell in std_cells)
     max_height = max(cell.size_info.height for cell in std_cells)
     padding = 10  # μm
+    vertical_cell_spacing = 1  # μm - spacing between different sizes of the same cell
 
     # Now create a grid where each functional category gets its own section
+    # Using negative y-values to make sure things flow from top to bottom
     y_offset = 0
 
     for category, category_cells in functional_groups.items():
-        # Add category header
-        c.add_label(text=f"================ {category.upper()} ================",
-                   position=(0, y_offset),
-                   layer=(66, 0))
-
         # Create a dict to hold grouped cells in this category
         category_groups = {}
 
@@ -191,10 +188,18 @@ def create_stdcell_grid() -> gf.Component:
         # Calculate the maximum stack height for this category
         max_stack_height = 0
         for base_name, group in category_groups.items():
-            stack_height = len(group) * (max_height + padding)
+            # Use vertical_cell_spacing instead of padding for stack height calculation
+            stack_height = len(group) * (max_height + vertical_cell_spacing)
             max_stack_height = max(max_stack_height, stack_height)
 
-        y_offset += padding * 2  # Space after category header
+        # Add category header - position it centered over the first row of cells
+        category_width = n_cols * (max_width + padding) * 3
+        c.add_label(text=f"================ {category.upper()} ================",
+                   position=(category_width / 2, y_offset),  # Center the label horizontally
+                   layer=(66, 0))
+
+        # Move y_offset down for cell placement (after the header)
+        y_offset -= padding * 3  # Space after category header - NEGATIVE to go down
 
         # Place each cell type in the grid
         for i, (base_name, group) in enumerate(category_groups.items()):
@@ -203,17 +208,19 @@ def create_stdcell_grid() -> gf.Component:
 
             # Calculate position for this stack
             x_base = col * (max_width + padding) * 3  # More horizontal spacing
-            y_base = y_offset + row * (max_stack_height + padding * 3)  # Vertical position for this stack
+            # Adjust y_base to be below the header (more negative = lower)
+            y_base = y_offset - row * (max_stack_height + padding * 3)  # Vertical position for this stack
 
             # Add base name label
             c.add_label(text=f"{base_name}",
                        position=(x_base, y_base),
                        layer=(66, 0))
 
-            # Stack different sizes of this cell type vertically
+            # Stack different sizes of this cell type vertically downward (more negative = lower)
             for j, (size, cell) in enumerate(group):
                 x = x_base
-                y = y_base - (j + 1) * (max_height + padding)  # Stack cells vertically with largest at top
+                # Place cells below the base name label (more negative = lower)
+                y = y_base - (j + 1) * (max_height + vertical_cell_spacing)  # Stack cells vertically below the label
 
                 ref = c << cell
                 ref.move((x, y))
@@ -223,8 +230,10 @@ def create_stdcell_grid() -> gf.Component:
                            position=(x - padding/2, y),
                            layer=(66, 0))
 
-        # Update y_offset for next category
-        y_offset += (n_rows * (max_stack_height + padding * 3)) + padding * 4
+        # Update y_offset for next category - ensure we move past all cells
+        max_rows_height = n_rows * (max_stack_height + padding * 3)
+        # Add the height of the tallest cell stack (more negative = lower)
+        y_offset -= (max_rows_height + padding * 4)
 
     return c
 
