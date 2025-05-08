@@ -122,11 +122,15 @@ def create_stdcell_grid() -> gf.Component:
             if basename in seen_cells:
                 continue
 
+            # Get filename without extension to use as cell name
+            filename_without_ext = os.path.splitext(basename)[0]
+            
+            # Import the cell from GDS
             cell = gf.import_gds(gds_file)
 
             if cell is not None:
-                # Rename the cell with a unique identifier to avoid conflicts
-                cell.name = f"{cell.name}__i{i}"
+                # Rename the cell to match the filename instead of using original name
+                cell.name = filename_without_ext
                 std_cells.append(cell)
                 seen_cells.add(basename)
                 # Print the actual cell name loaded from each GDS file
