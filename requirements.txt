@@ -1,3 +1,3 @@
 gdsfactory>=7.0.0
 numpy>=1.24.0
-git+https://github.com/gdsfactory/gf180.git
+git+https://github.com/mithro/gdsfactory-gf180mcu.git#egg=gf180
