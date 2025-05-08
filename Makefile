@@ -1,9 +1,10 @@
-.PHONY: setup clean run
+.PHONY: setup clean run shell
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
 PIP := $(VENV)/bin/pip
 REQ_STAMP := $(VENV)/.requirements.txt.stamp
+SHELL := /bin/bash
 
 setup: $(REQ_STAMP)
 
@@ -18,6 +19,10 @@ $(REQ_STAMP): requirements.txt | $(VENV)/bin/activate
 clean:
 	rm -rf $(VENV)
 	rm -f *.gds
+
+shell: setup
+	@echo "Starting shell with activated Python virtual environment..."
+	@bash --init-file <(echo '. "$(VENV)/bin/activate"')
 
 run: setup
 	$(PYTHON) stdcell_grid.py
