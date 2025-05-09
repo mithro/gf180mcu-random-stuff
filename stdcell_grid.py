@@ -182,20 +182,35 @@ def create_stdcell_grid() -> gf.Component:
                 if cell_name in cell_groups:
                     category_groups[cell_name] = cell_groups[cell_name]
 
+        # Organize cells by name prefix (e.g., "and", "or", "xor")
+        # Extract the prefixes from cell base names
+        name_prefixes = {}
+        for base_name in category_groups.keys():
+            # First, strip away the standard cell library prefix (if present)
+            # Cell names are typically like "gf180mcu_fd_sc_mcu7t5v0__and2"
+            actual_cell_name = base_name
+            if "__" in base_name:
+                actual_cell_name = base_name.split("__")[-1]
+
+            # Extract the common prefix (e.g., "and" from "and2", "and3")
+            # This regex finds the alphabetic prefix at the start of the actual cell name
+            prefix_match = re.match(r'^([a-zA-Z]+)', actual_cell_name)
+            if prefix_match:
+                prefix = prefix_match.group(1).lower()
+                if prefix not in name_prefixes:
+                    name_prefixes[prefix] = []
+                name_prefixes[prefix].append(base_name)
+            else:
+                # If no alphabetic prefix found, use the whole cell name
+                if actual_cell_name not in name_prefixes:
+                    name_prefixes[actual_cell_name] = []
+                name_prefixes[actual_cell_name].append(base_name)
+
         # Calculate grid dimensions for this category
-        n_cell_types = len(category_groups)
-        n_cols = 5  # Number of columns in the grid
-        n_rows = int(np.ceil(n_cell_types / n_cols))
+        n_rows = len(name_prefixes)  # One row per prefix group
 
-        # Calculate the maximum stack height for this category
-        max_stack_height = 0
-        for base_name, group in category_groups.items():
-            # Use vertical_cell_spacing instead of padding for stack height calculation
-            stack_height = len(group) * (max_height + vertical_cell_spacing)
-            max_stack_height = max(max_stack_height, stack_height)
-
-        # Add category header - position it centered over the first row of cells
-        category_width = n_cols * (max_width + padding) * 3
+        # Add category header
+        category_width = (max_width + padding) * 3 * 5  # Assuming up to 5 variations per prefix
         c.add_label(text=f"================ {category.upper()} ================",
                    position=(category_width / 2, y_offset),  # Center the label horizontally
                    layer=(66, 0))
@@ -203,39 +218,54 @@ def create_stdcell_grid() -> gf.Component:
         # Move y_offset down for cell placement (after the header)
         y_offset -= padding * 3  # Space after category header - NEGATIVE to go down
 
-        # Place each cell type in the grid
-        for i, (base_name, group) in enumerate(category_groups.items()):
-            row = i // n_cols
-            col = i % n_cols
+        # Place each prefix group in its own row
+        for i, (prefix, base_names) in enumerate(name_prefixes.items()):
+            # Calculate position for this row
+            y_row = y_offset - i * (max_height + padding) * 3  # Vertical position for this row
 
-            # Calculate position for this stack
-            x_base = col * (max_width + padding) * 3  # More horizontal spacing
-            # Adjust y_base to be below the header (more negative = lower)
-            y_base = y_offset - row * (max_stack_height + padding * 3)  # Vertical position for this stack
-
-            # Add base name label
-            c.add_label(text=f"{base_name}",
-                       position=(x_base, y_base),
+            # Add prefix label at the start of the row
+            c.add_label(text=f"{prefix.upper()}",
+                       position=(0, y_row),
                        layer=(66, 0))
 
-            # Stack different sizes of this cell type vertically downward (more negative = lower)
-            for j, (size, cell) in enumerate(group):
-                x = x_base
-                # Place cells below the base name label (more negative = lower)
-                y = y_base - (j + 1) * (max_height + vertical_cell_spacing)  # Stack cells vertically below the label
+            # Place each cell type with this prefix in this row
+            for j, base_name in enumerate(base_names):
+                group = category_groups[base_name]
 
-                ref = c << cell
-                ref.move((x, y))
+                # Calculate x position for this cell type
+                x_base = padding + j * (max_width + padding) * 3  # Horizontal spacing
 
-                # Add label with size
-                c.add_label(text=f"size: {size}",
-                           position=(x - padding/2, y),
+                # Add base name label
+                c.add_label(text=f"{base_name}",
+                           position=(x_base, y_row),
                            layer=(66, 0))
 
-        # Update y_offset for next category - ensure we move past all cells
-        max_rows_height = n_rows * (max_stack_height + padding * 3)
-        # Add the height of the tallest cell stack (more negative = lower)
-        y_offset -= (max_rows_height + padding * 4)
+                # Stack different sizes of this cell type vertically downward
+                for k, (size, cell) in enumerate(group):
+                    x = x_base
+                    # Place cells below the base name label
+                    y = y_row - (k + 1) * (max_height + vertical_cell_spacing)
+
+                    ref = c << cell
+                    ref.move((x, y))
+
+                    # Add label with size
+                    c.add_label(text=f"size: {size}",
+                               position=(x - padding/2, y),
+                               layer=(66, 0))
+
+            # Find the maximum stack height in this row
+            max_stack_height = 0
+            for base_name in base_names:
+                group = category_groups[base_name]
+                stack_height = len(group) * (max_height + vertical_cell_spacing)
+                max_stack_height = max(max_stack_height, stack_height)
+
+            # Add extra space between rows
+            y_offset -= (max_stack_height + padding * 4)
+
+        # Add extra space between categories
+        y_offset -= padding * 4
 
     return c
 
