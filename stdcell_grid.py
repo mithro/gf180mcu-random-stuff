@@ -157,8 +157,8 @@ def create_stdcell_grid() -> gf.Component:
     # Find maximum cell dimensions
     max_width = max(cell.size_info.width for cell in std_cells)
     max_height = max(cell.size_info.height for cell in std_cells)
-    padding = 10  # μm
-    vertical_cell_spacing = 1  # μm - spacing between different sizes of the same cell
+    padding = 5  # μm - reduced from 10
+    vertical_cell_spacing = 0.5  # μm - reduced from 1 - spacing between different sizes of the same cell
 
     # Now create a grid where each functional category gets its own section
     # Using negative y-values to make sure things flow from top to bottom
@@ -216,7 +216,7 @@ def create_stdcell_grid() -> gf.Component:
                    layer=(66, 0))
 
         # Move y_offset down for cell placement (after the header)
-        y_offset -= padding * 3  # Space after category header - NEGATIVE to go down
+        y_offset -= padding  # Reduced from padding * 3
 
         # Place each prefix group in its own row
         for i, (prefix, base_names) in enumerate(name_prefixes.items()):
@@ -236,7 +236,7 @@ def create_stdcell_grid() -> gf.Component:
                 group = category_groups[base_name]
                 
                 # Calculate x position for this cell type
-                x_base = padding + j * (max_width + padding) * 3  # Horizontal spacing
+                x_base = padding + j * (max_width + padding) * 1.5  # Reduced horizontal spacing from *3 to *1.5
                 
                 # Add base name label
                 c.add_label(text=f"{base_name}",
@@ -244,11 +244,11 @@ def create_stdcell_grid() -> gf.Component:
                            layer=(66, 0))
                 
                 # Calculate the height of this column (all sizes of this cell)
-                column_height = len(group) * (max_height + vertical_cell_spacing) + padding
+                column_height = len(group) * (max_height + vertical_cell_spacing) + vertical_cell_spacing
                 max_column_height = max(max_column_height, column_height)
                 
                 # Start placing cells below the base name label
-                y_cell = y_row - padding * 2
+                y_cell = y_row - vertical_cell_spacing * 2
                 
                 # Stack different sizes of this cell type vertically downward
                 for k, (size, cell) in enumerate(group):
@@ -265,10 +265,10 @@ def create_stdcell_grid() -> gf.Component:
                                layer=(66, 0))
             
             # Move y_offset down for the next row
-            y_offset -= (max_column_height + padding * 2)
+            y_offset -= (max_column_height + vertical_cell_spacing)
         
         # Add extra space between categories
-        y_offset -= padding * 4
+        y_offset -= padding  # Reduced from padding * 4
 
     return c
 
