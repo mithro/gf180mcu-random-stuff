@@ -1,4 +1,4 @@
-.PHONY: setup clean run shell metal-grid
+.PHONY: setup clean run shell metal-grid dense-via-array
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -31,3 +31,10 @@ run: setup
 metal-grid: setup
 	@mkdir -p build/gds
 	$(PYTHON) metal_grid_with_vias.py
+
+dense-via-array: setup
+	@mkdir -p build/gds
+	$(PYTHON) dense_via_array.py
+	@echo "Dense via array files generated in build/gds/"
+
+all: run metal-grid dense-via-array
