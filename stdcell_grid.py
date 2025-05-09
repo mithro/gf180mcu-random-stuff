@@ -18,24 +18,26 @@ def categorize_cell(cell_name):
     if not cell_name:
         return "other"
 
-    base_name = re.sub(r'_[1248](?:6|2)?$', '', cell_name)
+    base_name = re.sub(r'_(?:[1-9]|1[0-9]|2[0-9]|3[0-2]|64)$', '', cell_name)
+    name_lower = base_name.lower()
 
     # Define categories
-    categories = {
-        'logic_gates': ['and', 'or', 'nand', 'nor', 'xor', 'xnor', 'inv', 'buf'],
-        'flip_flops': ['dff', 'sdff'],
-        'latches': ['lat'],
-        'mux': ['mux'],
-        'arithmetic': ['add', 'addf', 'addh'],
-        'aoi_oai': ['aoi', 'oai'],
-        'clock': ['clk', 'icgt'],
-        'delay': ['dly'],
-        'special': ['fill', 'tie', 'endcap', 'antenna']
-    }
+    categories = [
+        ('clock',       ['clk', 'icgt']),
+        ('aoi_oai',     ['aoi', 'oai']),
+        ('arithmetic',  ['add', 'addf', 'addh']),
+        ('buffers',     ['inv', 'buf']),
+        ('logic_gates', ['and', 'or', 'nand', 'nor', 'xor', 'xnor']),
+        ('flip_flops',  ['dff', 'sdff']),
+        ('latches',     ['lat']),
+        ('mux',         ['mux']),
+        ('delay',       ['dly']),
+        ('special',     ['fill', 'tie', 'endcap', 'antenna']),
+    ]
 
     # Find matching category
-    for category, patterns in categories.items():
-        if any(pattern in base_name.lower() for pattern in patterns):
+    for category, patterns in categories:
+        if any(pattern in name_lower for pattern in patterns):
             return category
 
     return 'other'
@@ -47,7 +49,7 @@ def group_cells_by_base_and_size(cells):
     for cell in cells:
         # Try to extract the base name (without the size suffix if present)
         cell_name = cell.name
-        match = re.match(r'(.+?)_([1248]|(?:16|20|32|64))$', cell_name)
+        match = re.match(r'(.+?)_(?:([1-9]|1[0-9]|2[0-9]|3[0-2]|64))$', cell_name)
 
         if match:
             base_name = match.group(1)
@@ -169,7 +171,7 @@ def create_stdcell_grid() -> gf.Component:
         # Find all base cell types in this category
         for cell in category_cells:
             cell_name = cell.name
-            match = re.match(r'(.+?)_([1248]|(?:16|20|32|64))$', cell_name)
+            match = re.match(r'(.+?)_(?:[1-9]|1[0-9]|2[0-9]|3[0-2]|64)$', cell_name)
 
             if match:
                 base_name = match.group(1)
