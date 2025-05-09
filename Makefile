@@ -1,4 +1,4 @@
-.PHONY: setup clean run shell
+.PHONY: setup clean run shell metal-grid
 
 VENV := .venv
 PYTHON := $(VENV)/bin/python
@@ -19,6 +19,7 @@ $(REQ_STAMP): requirements.txt | $(VENV)/bin/activate
 clean:
 	rm -rf $(VENV)
 	rm -f *.gds
+	rm -rf build/gds
 
 shell: setup
 	@echo "Starting shell with activated Python virtual environment..."
@@ -26,3 +27,7 @@ shell: setup
 
 run: setup
 	$(PYTHON) stdcell_grid.py
+
+metal-grid: setup
+	@mkdir -p build/gds
+	$(PYTHON) metal_grid_with_vias.py
