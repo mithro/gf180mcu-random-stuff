@@ -1,3 +1,4 @@
+docopt
 gdsfactory>=7.11.2
 requests>=2.31.0
 numpy>=1.24.0
