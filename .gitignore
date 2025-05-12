@@ -30,3 +30,5 @@ build/
 
 # PDK
 gf180mcu-pdk
+
+.~lock*
