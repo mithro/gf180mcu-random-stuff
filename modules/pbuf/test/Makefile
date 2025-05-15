@@ -17,8 +17,8 @@ SRC = ../pbuf.v
 TEST_SRC = pbuf_test.v
 
 # PDK standard cell models
-PDK_DFFQ = $(PDK_LIBRARY)/dffq/gf180mcu_fd_sc_mcu7t5v0__dffq_1.functional.v
-PDK_BUFZ = $(PDK_LIBRARY)/bufz/gf180mcu_fd_sc_mcu7t5v0__bufz_4.functional.v
+PDK_DFFQ = $(PDK_LIBRARY)/dffq/gf180mcu_fd_sc_mcu7t5v0__dffq_1.behavioral.v
+PDK_BUFZ = $(PDK_LIBRARY)/bufz/gf180mcu_fd_sc_mcu7t5v0__bufz_4.behavioral.v
 PDK_CELLS = $(PDK_DFFQ) $(PDK_BUFZ)
 
 # Output files
