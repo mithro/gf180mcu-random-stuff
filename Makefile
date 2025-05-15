@@ -1,4 +1,4 @@
-.PHONY: setup clean run shell metal-grid dense-via-array drc drc-metal-grid drc-dense-via-array all
+.PHONY: setup clean run shell metal-grid dense-via-array drc drc-metal-grid drc-dense-via-array all modules-flow
 
 VENV := $(realpath .venv)
 PYTHON := $(VENV)/bin/python
@@ -125,4 +125,10 @@ $(DRC_DIR)/via_array/%_drc.lyrdb: $(GDS_DIR)/%.gds | $(DRC_DIR)
 		$(DRC_PARAMS)
 	@echo "DRC report generated: $@"
 
-all: run metal-grid dense-via-array
+# Include modules Makefile for digital flows
+modules-flow:
+	@echo "Running digital implementation flow for modules..."
+	@$(MAKE) -C modules
+
+# Add modules to the 'all' target
+all: run metal-grid dense-via-array modules-flow
