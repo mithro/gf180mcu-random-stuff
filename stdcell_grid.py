@@ -5,42 +5,13 @@ import gdsfactory as gf
 import numpy as np
 from collections import defaultdict
 import re
+from cell_categorization import categorize_cell
 
 def find_gds_files(pdk_path):
     """Find standard cell GDS files in the PDK."""
     # Path pattern for standard cells in GF180MCU PDK
     std_cell_pattern = "libraries/gf180mcu_fd_sc_mcu*/latest/cells/*/*.gds"
     return list(pdk_path.glob(std_cell_pattern))
-
-def categorize_cell(cell_name):
-    """Categorize a cell based on its name."""
-    # Extract the base name (remove size suffix)
-    if not cell_name:
-        return "other"
-
-    base_name = re.sub(r'_(?:[1-9]|1[0-9]|2[0-9]|3[0-2]|64)$', '', cell_name)
-    name_lower = base_name.lower()
-
-    # Define categories
-    categories = [
-        ('clock',       ['clk', 'icgt']),
-        ('aoi_oai',     ['aoi', 'oai']),
-        ('arithmetic',  ['add', 'addf', 'addh']),
-        ('buffers',     ['inv', 'buf']),
-        ('logic_gates', ['and', 'or', 'nand', 'nor', 'xor', 'xnor']),
-        ('flip_flops',  ['dff', 'sdff']),
-        ('latches',     ['lat']),
-        ('mux',         ['mux']),
-        ('delay',       ['dly']),
-        ('special',     ['fill', 'tie', 'endcap', 'antenna']),
-    ]
-
-    # Find matching category
-    for category, patterns in categories:
-        if any(pattern in name_lower for pattern in patterns):
-            return category
-
-    return 'other'
 
 def group_cells_by_base_and_size(cells):
     """Group cells by their base name and size."""

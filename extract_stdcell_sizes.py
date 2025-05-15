@@ -12,6 +12,7 @@ import re
 import csv
 import glob
 from pathlib import Path
+from cell_categorization import categorize_cell
 
 # PDK path
 PDK_PATH = os.path.join(os.getcwd(), "gf180mcu-pdk")
@@ -92,6 +93,9 @@ def main():
                     # Calculate cell area
                     area = width * height
                     
+                    # Get cell category/group
+                    group = categorize_cell(cell_name)
+                    
                     # Store cell data
                     cell_info = {
                         'library': lib,
@@ -99,7 +103,8 @@ def main():
                         'name': cell_name,
                         'width_um': width,
                         'height_um': height,
-                        'area_um2': area
+                        'area_um2': area,
+                        'group': group
                     }
                     
                     cell_data.append(cell_info)
@@ -111,14 +116,26 @@ def main():
     # Write CSV file
     csv_file = "gf180mcu_stdcell_sizes.csv"
     with open(csv_file, 'w', newline='') as file:
-        fieldnames = ['library', 'type', 'name', 'width_um', 'height_um', 'area_um2']
+        fieldnames = ['library', 'type', 'name', 'width_um', 'height_um', 'area_um2', 'group']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         
         writer.writeheader()
         for cell in cell_data:
             writer.writerow(cell)
     
-    print(f"Successfully extracted {len(cell_data)} cell sizes.")
+    # Print group statistics
+    print("\nCell categorization summary:")
+    group_stats = {}
+    for cell in cell_data:
+        group = cell['group']
+        if group not in group_stats:
+            group_stats[group] = 0
+        group_stats[group] += 1
+    
+    for group, count in sorted(group_stats.items(), key=lambda x: x[1], reverse=True):
+        print(f"  {group}: {count} cells")
+    
+    print(f"\nSuccessfully extracted {len(cell_data)} cell sizes.")
     print(f"CSV report written to: {csv_file}")
 
 if __name__ == "__main__":
