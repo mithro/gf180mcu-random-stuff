@@ -26,20 +26,90 @@ module lutu_test;
     
     // Test function patterns to be programmed into the mux
     // These are example patterns for different configurations
-    // First mux (out[0]) control patterns
-    localparam [3:0] PATTERN_MUX1_AND  = 4'b1000; // AND of in[0] and in[1]
-    localparam [3:0] PATTERN_MUX1_OR   = 4'b1110; // OR of in[0] and in[1]
-    localparam [3:0] PATTERN_MUX1_XOR  = 4'b0110; // XOR of in[0] and in[1]
+    localparam [3:0] PATTERN_AND  = 4'b1000;
+    localparam [3:0] PATTERN_OR   = 4'b1110;
+    localparam [3:0] PATTERN_XOR  = 4'b0110;
     
-    // Second mux (out[1]) control patterns
-    localparam [3:0] PATTERN_MUX2_AND  = 4'b1000; // AND of in[2] and in[3]
-    localparam [3:0] PATTERN_MUX2_OR   = 4'b1110; // OR of in[2] and in[3]
-    localparam [3:0] PATTERN_MUX2_XOR  = 4'b0110; // XOR of in[2] and in[3]
+    // Expected output patterns for different configurations
+    // 2D array format: [16 input combinations][3 outputs]
+    localparam [0:15][2:0] EXPECTED_TRIPLE_AND = {
+        // in=0000  in=0001  in=0010  in=0011
+           3'b000,  3'b000,  3'b000,  3'b000,
+        // in=0100  in=0101  in=0110  in=0111
+           3'b000,  3'b000,  3'b000,  3'b000,
+        // in=1000  in=1001  in=1010  in=1011
+           3'b000,  3'b000,  3'b000,  3'b000,
+        // in=1100  in=1101  in=1110  in=1111
+           3'b000,  3'b000,  3'b000,  3'b111
+    };
     
-    // Third mux (out[2]) control patterns
-    localparam [3:0] PATTERN_MUX3_AND  = 4'b1000; // AND of out[0] and out[1]
-    localparam [3:0] PATTERN_MUX3_OR   = 4'b1110; // OR of out[0] and out[1]
-    localparam [3:0] PATTERN_MUX3_XOR  = 4'b0110; // XOR of out[0] and out[1]
+    localparam [0:15][2:0] EXPECTED_TRIPLE_OR = {
+        // in=0000  in=0001  in=0010  in=0011
+           3'b000,  3'b111,  3'b111,  3'b111,
+        // in=0100  in=0101  in=0110  in=0111
+           3'b111,  3'b111,  3'b111,  3'b111,
+        // in=1000  in=1001  in=1010  in=1011
+           3'b111,  3'b111,  3'b111,  3'b111,
+        // in=1100  in=1101  in=1110  in=1111
+           3'b111,  3'b111,  3'b111,  3'b111
+    };
+    
+    localparam [0:15][2:0] EXPECTED_TRIPLE_XOR = {
+        // in=0000  in=0001  in=0010  in=0011
+           3'b000,  3'b111,  3'b111,  3'b000,
+        // in=0100  in=0101  in=0110  in=0111
+           3'b111,  3'b000,  3'b000,  3'b111,
+        // in=1000  in=1001  in=1010  in=1011
+           3'b111,  3'b000,  3'b000,  3'b111,
+        // in=1100  in=1101  in=1110  in=1111
+           3'b000,  3'b111,  3'b111,  3'b000
+    };
+    
+    localparam [0:15][2:0] EXPECTED_AND_OR_XOR = {
+        // in=0000  in=0001  in=0010  in=0011
+           3'b000,  3'b001,  3'b010,  3'b011,
+        // in=0100  in=0101  in=0110  in=0111
+           3'b100,  3'b101,  3'b110,  3'b111,
+        // in=1000  in=1001  in=1010  in=1011
+           3'b100,  3'b101,  3'b110,  3'b111,
+        // in=1100  in=1101  in=1110  in=1111
+           3'b100,  3'b101,  3'b110,  3'b111
+    };
+    
+    // Task to test a specific LUT configuration
+    task test_configuration;
+        input [127:0] config_name;   // Configuration name (as a string)
+        input [3:0] lut1_pattern;    // Pattern for LUT1 (out[0])
+        input [3:0] lut2_pattern;    // Pattern for LUT2 (out[1])
+        input [3:0] lut3_pattern;    // Pattern for LUT3 (out[2])
+        input [0:15][2:0] expected;  // Expected outputs for all 16 input combinations [inputs][outputs]
+        begin
+            $display("Testing configuration: %s", config_name);
+            
+            // Program the LUT with the specified patterns
+            program_store(lut1_pattern, lut2_pattern, lut3_pattern);
+            #10; // Allow time for programming to complete
+            
+            // Test all 16 input combinations
+            for (i = 0; i < 16; i = i + 1) begin
+                in = i[3:0]; // Set input value
+                #10; // Allow time for output to stabilize
+                
+                // Get expected output for this input from the 2D array
+                expected_out = expected[i];
+                
+                // Check if output matches expected value
+                if (out !== expected_out) begin
+                    $display("ERROR: %s test failed for input %b", config_name, in);
+                    $display("  Expected: %b, Got: %b", expected_out, out);
+                    $finish;
+                end
+            end
+            
+            $display("%s configuration test PASSED", config_name);
+            #10; // Delay between configurations
+        end
+    endtask
     
     // Function to program the lutu with a 3*4-bit patterns for the 3 muxes
     task program_store;
@@ -87,28 +157,28 @@ module lutu_test;
         // Configuration 1: All AND gates
         test_configuration(
             "Triple AND",
-            PATTERN_MUX1_AND, PATTERN_MUX2_AND, PATTERN_MUX3_AND,
+            PATTERN_AND, PATTERN_AND, PATTERN_AND,
             EXPECTED_TRIPLE_AND
         );
         
         // Configuration 2: All OR gates
         test_configuration(
             "Triple OR",
-            PATTERN_MUX1_OR, PATTERN_MUX2_OR, PATTERN_MUX3_OR,
+            PATTERN_OR, PATTERN_OR, PATTERN_OR,
             EXPECTED_TRIPLE_OR
         );
         
         // Configuration 3: All XOR gates
         test_configuration(
             "Triple XOR",
-            PATTERN_MUX1_XOR, PATTERN_MUX2_XOR, PATTERN_MUX3_XOR,
+            PATTERN_XOR, PATTERN_XOR, PATTERN_XOR,
             EXPECTED_TRIPLE_XOR
         );
         
         // Configuration 4: Mixed operations (AND-OR-XOR)
         test_configuration(
             "AND-OR-XOR",
-            PATTERN_MUX1_AND, PATTERN_MUX2_OR, PATTERN_MUX3_XOR,
+            PATTERN_AND, PATTERN_OR, PATTERN_XOR,
             EXPECTED_AND_OR_XOR
         );
         
