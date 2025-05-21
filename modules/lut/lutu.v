@@ -31,9 +31,9 @@
 //    - out[2] = in[2] XX in[3] (XX is the logic function).
 //    - out[0] can be any constant (0 or 1)
 //
-// 3. Logic functions with 3 inputs (and 1 passthrough):
+// 3. Logic functions with 3 inputs:
 //    - out[0] = in[0] XX in[1] XX in[2] (XX is the logic function).
-//    - out[1] = in[3]
+//    - out[1] is unused.
 //
 // 3. Complex Functions:
 //    - Any function expressible as a combination of two 2-input functions
