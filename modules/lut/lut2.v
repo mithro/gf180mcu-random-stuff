@@ -1,17 +1,20 @@
-// Description: "Programmable" 4-to-1 multiplexer with inverted output
+// Description: LUT2 (2-input lookup table)
 // 
 //                     <--------- 32.48 um ----->
 // +========+========+ +========================+
 // | mux4_1 | inv_12 | | 17.92 um    | 14.56 um |
 // +--------+--------+ +------------++----------+
-// | dffq_1 | dffq_1 | | 16.24 um   | 16.24 um  |
+// | latq_1 | latq_1 | | 16.24 um   | 16.24 um  |
 // +--------+--------+ +------------++----------+
-// | dffq_1 | dffq_1 | | 16.24 um   | 16.24 um  |
+// | latq_1 | latq_1 | | 16.24 um   | 16.24 um  |
 // +========+========+ +========================+
 //
-// LUT4 Usage Guide:
-// This module can act as a 2-input lookup table (LUT4) to implement various logic functions.
+// LUT2 Usage Guide:
+// This module can act as a 2-input lookup table (LUT2) to implement various
+// logic functions.
+// 
 // Input values 'in[1:0]' are used as select lines for the 4-to-1 multiplexer.
+//
 // The store_2x2 module holds the programmable LUT values.
 // NOTE: The final output is inverted due to the inv_12 at the output.
 // 
@@ -26,8 +29,10 @@
 // +--------+--------+------------------+---------------+
 //
 // Common 2-input Logic Functions:
-// For each function, the table shows the pattern to load into the LUT and the resulting output:
 //
+// For each function, the table shows the pattern to load into the LUT and the
+// resulting output:
+// 
 // 1. AND (A & B):
 //    - Program pattern = 4'b1110 (0xE)
 //    - Expected output = 4'b0001 (0x1)
@@ -72,7 +77,7 @@
 // To program the LUT, load the 4-bit pattern through prog_dat0/prog_dat1 and 
 // capture using prog_cap0/prog_cap1 according to the store_2x2 documentation.
 //
-module pmux4 (
+module lut2 (
     // Multipled lines
     input  wire [1:0] in,
     output wire out,
