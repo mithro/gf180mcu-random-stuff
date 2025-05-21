@@ -12,7 +12,7 @@
 // LUT4 Usage Guide:
 // This module can act as a 2-input lookup table (LUT4) to implement various logic functions.
 // Input values 'in[1:0]' are used as select lines for the 4-to-1 multiplexer.
-// The store4 module holds the programmable LUT values.
+// The store_2x2 module holds the programmable LUT values.
 // NOTE: The final output is inverted due to the inv_12 at the output.
 // 
 // Truth table for input combinations (in[1:0]) and which store4 bit is selected:
@@ -70,7 +70,7 @@
 //
 // Programming sequence:
 // To program the LUT, load the 4-bit pattern through prog_dat0/prog_dat1 and 
-// capture using prog_cap0/prog_cap1 according to the store4 documentation.
+// capture using prog_cap0/prog_cap1 according to the store_2x2 documentation.
 //
 module pmux4 (
     // Multipled lines
@@ -83,8 +83,8 @@ module pmux4 (
     input  wire prog_cap1
 );
     
-    wire [0:3] q; // Wire to store the 4 bits from store4
-    store4 storage (
+    wire [0:3] q; // Wire to store the 4 bits from store_2x2
+    store_2x2 storage (
         .dat0(prog_dat0),
         .dat1(prog_dat1),
         .cap0(prog_cap0),
