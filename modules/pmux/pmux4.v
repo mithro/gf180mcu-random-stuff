@@ -1,4 +1,4 @@
-// Description: "Programmable" 4-to-1 multiplexer
+// Description: "Programmable" 4-to-1 multiplexer with inverted output
 // 
 //                     <--------- 32.48 um ----->
 // +========+========+ +========================+
@@ -13,48 +13,59 @@
 // This module can act as a 2-input lookup table (LUT4) to implement various logic functions.
 // Input values 'in[1:0]' are used as select lines for the 4-to-1 multiplexer.
 // The store4 module holds the programmable LUT values.
+// NOTE: The final output is inverted due to the inv_12 at the output.
 // 
 // Truth table for input combinations (in[1:0]) and which store4 bit is selected:
-// +--------+--------+-----------------+
-// | in[1]  | in[0]  | Selected Value  |
-// +--------+--------+-----------------+
-// |   0    |   0    |      q[0]       |
-// |   0    |   1    |      q[1]       |
-// |   1    |   0    |      q[2]       |
-// |   1    |   1    |      q[3]       |
-// +--------+--------+-----------------+
+// +--------+--------+------------------+---------------+
+// | in[1]  | in[0]  | Selected Value   | Final Output  |
+// +--------+--------+------------------+---------------+
+// |   0    |   0    |      q[0]        |     !q[0]     |
+// |   0    |   1    |      q[1]        |     !q[1]     |
+// |   1    |   0    |      q[2]        |     !q[2]     |
+// |   1    |   1    |      q[3]        |     !q[3]     |
+// +--------+--------+------------------+---------------+
 //
 // Common 2-input Logic Functions:
+// For each function, the table shows the pattern to load into the LUT and the resulting output:
+//
 // 1. AND (A & B):
-//    - Set q = 4'b0001 (0x1)
+//    - Program pattern = 4'b1110 (0xE)
+//    - Expected output = 4'b0001 (0x1)
 //    - Truth table: output = 1 only when in[1]=1 AND in[0]=1
 //
 // 2. OR (A | B):
-//    - Set q = 4'b0111 (0x7)
+//    - Program pattern = 4'b1000 (0x8)
+//    - Expected output = 4'b0111 (0x7)
 //    - Truth table: output = 1 when either in[1]=1 OR in[0]=1 (or both)
 //
 // 3. XOR (A ^ B):
-//    - Set q = 4'b0110 (0x6)
+//    - Program pattern = 4'b1001 (0x9)
+//    - Expected output = 4'b0110 (0x6)
 //    - Truth table: output = 1 when in[1] XOR in[0] = 1
 //
 // 4. NAND (!(A & B)):
-//    - Set q = 4'b1110 (0xE)
+//    - Program pattern = 4'b0001 (0x1)
+//    - Expected output = 4'b1110 (0xE)
 //    - Truth table: output = 0 only when in[1]=1 AND in[0]=1
 //
 // 5. NOR (!(A | B)):
-//    - Set q = 4'b1000 (0x8)
+//    - Program pattern = 4'b0111 (0x7)
+//    - Expected output = 4'b1000 (0x8)
 //    - Truth table: output = 1 only when in[1]=0 AND in[0]=0
 //
 // 6. XNOR (!(A ^ B)):
-//    - Set q = 4'b1001 (0x9)
+//    - Program pattern = 4'b0110 (0x6)
+//    - Expected output = 4'b1001 (0x9)
 //    - Truth table: output = 1 when in[1] equals in[0]
 //
 // 7. Buffer (A):
-//    - Set q = 4'b0101 (0x5)
+//    - Program pattern = 4'b1010 (0xA)
+//    - Expected output = 4'b0101 (0x5)
 //    - Truth table: output = in[0] regardless of in[1]
 //
 // 8. Inverted Buffer (!A):
-//    - Set q = 4'b1010 (0xA)
+//    - Program pattern = 4'b0101 (0x5)
+//    - Expected output = 4'b1010 (0xA)
 //    - Truth table: output = !in[0] regardless of in[1]
 //
 // Programming sequence:
@@ -67,7 +78,7 @@ module pmux4 (
     output wire out,
     // Programmable control
     input  wire prog_dat0,
-    output wire prog_dat1,
+    input  wire prog_dat1,
     input  wire prog_cap0,
     input  wire prog_cap1
 );
@@ -95,7 +106,7 @@ module pmux4 (
     
     gf180mcu_fd_sc_mcu7t5v0__inv_12 inv (
         .I(mux_out),
-        .O(out)
+        .ZN(out)
     );
 
 endmodule
