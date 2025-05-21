@@ -33,5 +33,5 @@ gf180mcu-pdk
 
 .~lock*
 
-modules/pbuf/test/pbuf_test
-modules/pbuf/test/pbuf_test.vcd
+modules/*/test/*_test
+modules/*/test/*_test.vcd
