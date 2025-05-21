@@ -21,96 +21,60 @@ module pbuf6 (
     input  wire [5:0] in,
     output wire [5:0] out,
     // Programmable control
-    input  wire prog_in,
-    output wire prog_out,
-    input  wire prog_clk0,
-    input  wire prog_clk1
+    input  wire prog_dat0,
+    input  wire prog_dat1,
+    input  wire prog_dat2,
+    input  wire prog_cap0,
+    input  wire prog_cap1
 );
 
-    // Internal wires to connect flip-flop outputs
-    wire q0, q1, q2, q3, q4, q5;
-
-    // 6 D flip-flops connected as a shift register
-    // Even-numbered flip-flops (dff0, dff2, dff4) use prog_clk0
-    // Odd-numbered flip-flops (dff1, dff3, dff5) use prog_clk1
-
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff0 (
-        .D(prog_in),
-        .CLK(prog_clk0),
-        .Q(q0)
+    // Storage elements that drive buffer enables
+    wire [0:6] q;  // Output from store_3x2 modules
+    
+    // Using store_3x2 for the first chain
+    store_3x2 prog0_store (
+        .dat0(prog_dat0),   // Data input for row 0
+        .dat1(prog_dat1),   // Data input for row 1
+        .dat2(prog_dat2),   // Data input for row 2 
+        .cap0(prog_cap0),   // Capture data for column 0
+        .cap1(prog_cap1),   // Capture data for column 1
+        .out({q[0], q[1], q[2], q[3], q[4], q[5]})  // Stored data output
     );
 
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff1 (
-        .D(q0),
-        .CLK(prog_clk1),
-        .Q(q1)
-    );
-
-    // Even-numbered flip-flops (dff0, dff2) use prog_clk0
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff2 (
-        .D(q1),
-        .CLK(prog_clk0),
-        .Q(q2)
-    );
-
-    // Odd-numbered flip-flops (dff1, dff3) use prog_clk1
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff3 (
-        .D(q2),
-        .CLK(prog_clk1),
-        .Q(q3)
-    );
-
-    // Even-numbered flip-flops (dff0, dff2, dff4) use prog_clk0
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff4 (
-        .D(q3),
-        .CLK(prog_clk0),
-        .Q(q4)
-    );
-
-    // Odd-numbered flip-flops (dff1, dff3, dff5) use prog_clk1
-    gf180mcu_fd_sc_mcu7t5v0__dffq_1 dff5 (
-        .D(q4),
-        .CLK(prog_clk1),
-        .Q(q5)
-    );
-
-    // Connect the last flip-flop output to prog_out
-    assign prog_out = q5;
-
-    // 6 tristate buffers, each enabled by a flip-flop output
+    // 6 tristate buffers, each enabled by an output from the store module
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf0 (
         .I(in[0]),
-        .EN(q0),
+        .EN(q[0]),
         .Z(out[0])
     );
 
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf1 (
         .I(in[1]),
-        .EN(q1),
+        .EN(q[1]),
         .Z(out[1])
     );
 
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf2 (
         .I(in[2]),
-        .EN(q2),
+        .EN(q[2]),
         .Z(out[2])
     );
 
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf3 (
         .I(in[3]),
-        .EN(q3),
+        .EN(q[3]),
         .Z(out[3])
     );
 
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf4 (
         .I(in[4]),
-        .EN(q4),
+        .EN(q[4]),
         .Z(out[4])
     );
 
     gf180mcu_fd_sc_mcu7t5v0__bufz_4 buf5 (
         .I(in[5]),
-        .EN(q5),
+        .EN(q[5]),
         .Z(out[5])
     );
 
