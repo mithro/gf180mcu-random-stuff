@@ -32,3 +32,6 @@ build/
 gf180mcu-pdk
 
 .~lock*
+
+modules/pbuf/test/pbuf_test
+modules/pbuf/test/pbuf_test.vcd

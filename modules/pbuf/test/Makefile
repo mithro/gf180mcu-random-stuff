@@ -9,17 +9,13 @@ VVP = vvp
 WAVEFORM_VIEWER = gtkwave
 
 # PDK variables
-PDK_PATH = $(shell git rev-parse --show-toplevel)/gf180mcu-pdk
-PDK_LIBRARY = $(PDK_PATH)/libraries/gf180mcu_fd_sc_mcu7t5v0/latest/cells
+PDK_PATH = /home/tim/.volare/volare/gf180mcu/versions/18dbe6102a36303bb8942b490efb0f33d2815bdb/gf180mcuA
+PDK_LIBRARY = $(PDK_PATH)/libs.ref/gf180mcu_fd_sc_mcu7t5v0/verilog
 
 # Source files
 SRC = ../pbuf.v
 TEST_SRC = pbuf_test.v
-
-# PDK standard cell models
-PDK_DFFQ = $(PDK_LIBRARY)/dffq/gf180mcu_fd_sc_mcu7t5v0__dffq_1.behavioral.v
-PDK_BUFZ = $(PDK_LIBRARY)/bufz/gf180mcu_fd_sc_mcu7t5v0__bufz_4.behavioral.v
-PDK_CELLS = $(PDK_DFFQ) $(PDK_BUFZ)
+PDK_CELLS = $(PDK_LIBRARY)/primitives.v $(PDK_LIBRARY)/gf180mcu_fd_sc_mcu7t5v0.v
 
 # Output files
 OUTPUT = pbuf_test
@@ -27,7 +23,7 @@ VCD = pbuf_test.vcd
 
 # Compile the test
 $(OUTPUT): $(SRC) $(TEST_SRC) $(PDK_CELLS)
-	$(IVERILOG) -o $(OUTPUT) $(TEST_SRC) $(SRC) $(PDK_CELLS)
+	$(IVERILOG) -DFUNCTIONAL -I$(PDK_LIBRARY) -o $(OUTPUT) $(TEST_SRC) $(SRC) $(PDK_CELLS)
 
 # Run the test
 test: $(OUTPUT)
